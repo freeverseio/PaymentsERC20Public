@@ -87,95 +87,95 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
 
     /// @inheritdoc IPaymentsERC20
     function relayedPay(
-        PaymentInput calldata inp,
+        PaymentInput calldata payInput,
         bytes calldata buyerSignature
     ) external {
         require(
-            universeOperator(inp.universeId) == msg.sender,
+            universeOperator(payInput.universeId) == msg.sender,
             "operator not authorized for this universeId"
         );
-        checkPaymentInputs(inp);
+        checkPaymentInputs(payInput);
         require(
-            verifyPayment(inp, buyerSignature, inp.buyer),
+            verifyPayment(payInput, buyerSignature, payInput.buyer),
             "incorrect buyer signature"
         );
-        _payments[inp.paymentId] = Payment(
+        _payments[payInput.paymentId] = Payment(
             State.AssetTransferring,
-            inp.buyer,
-            inp.seller,
+            payInput.buyer,
+            payInput.seller,
             msg.sender,
-            universeFeesCollector(inp.universeId),
+            universeFeesCollector(payInput.universeId),
             block.timestamp + _paymentWindow,
-            inp.feeBPS,
-            inp.amount
+            payInput.feeBPS,
+            payInput.amount
         );
         (uint256 newFunds, uint256 localFunds) = splitFundingSources(
-            inp.buyer,
-            inp.amount
+            payInput.buyer,
+            payInput.amount
         );
         if (newFunds > 0) {
             require(
-                IERC20(_erc20).transferFrom(inp.buyer, address(this), newFunds),
+                IERC20(_erc20).transferFrom(payInput.buyer, address(this), newFunds),
                 "ERC20 transfer failed"
             );
         }
-        _balanceOf[inp.buyer] -= localFunds;
-        emit Payin(inp.paymentId, inp.buyer, inp.seller);
+        _balanceOf[payInput.buyer] -= localFunds;
+        emit Payin(payInput.paymentId, payInput.buyer, payInput.seller);
     }
 
     /// @inheritdoc IPaymentsERC20
-    function pay(PaymentInput calldata inp, bytes calldata operatorSignature)
+    function pay(PaymentInput calldata payInput, bytes calldata operatorSignature)
         external
     {
         require(
-            msg.sender == inp.buyer,
+            msg.sender == payInput.buyer,
             "only buyer can execute this function"
         );
-        checkPaymentInputs(inp);
-        address operator = universeOperator(inp.universeId);
+        checkPaymentInputs(payInput);
+        address operator = universeOperator(payInput.universeId);
         require(
-            verifyPayment(inp, operatorSignature, operator),
+            verifyPayment(payInput, operatorSignature, operator),
             "incorrect operator signature"
         );
 
-        _payments[inp.paymentId] = Payment(
+        _payments[payInput.paymentId] = Payment(
             State.AssetTransferring,
-            inp.buyer,
-            inp.seller,
+            payInput.buyer,
+            payInput.seller,
             operator,
-            universeFeesCollector(inp.universeId),
+            universeFeesCollector(payInput.universeId),
             block.timestamp + _paymentWindow,
-            inp.feeBPS,
-            inp.amount
+            payInput.feeBPS,
+            payInput.amount
         );
         (uint256 newFunds, uint256 localFunds) = splitFundingSources(
-            inp.buyer,
-            inp.amount
+            payInput.buyer,
+            payInput.amount
         );
         if (newFunds > 0) {
             require(
-                IERC20(_erc20).transferFrom(inp.buyer, address(this), newFunds),
+                IERC20(_erc20).transferFrom(payInput.buyer, address(this), newFunds),
                 "ERC20 transfer failed"
             );
         }
-        _balanceOf[inp.buyer] -= localFunds;
-        emit Payin(inp.paymentId, inp.buyer, inp.seller);
+        _balanceOf[payInput.buyer] -= localFunds;
+        emit Payin(payInput.paymentId, payInput.buyer, payInput.seller);
     }
 
     /// @inheritdoc IPaymentsERC20
     function finalize(
-        AssetTransferResult calldata result,
+        AssetTransferResult calldata transferResult,
         bytes calldata operatorSignature
     ) external {
-        _finalize(result, operatorSignature);
+        _finalize(transferResult, operatorSignature);
     }
 
     /// @inheritdoc IPaymentsERC20
     function finalizeAndWithdraw(
-        AssetTransferResult calldata result,
+        AssetTransferResult calldata transferResult,
         bytes calldata operatorSignature
     ) external {
-        _finalize(result, operatorSignature);
+        _finalize(transferResult, operatorSignature);
         _withdraw();
     }
 
@@ -216,26 +216,26 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
      *  the balances of seller (on success) or buyer (on failure).
      *  They still need to withdraw afterwards.
      *  Moves the payment to either PAID (on success) or REFUNDED (on failure) state
-     * @param result The asset transfer result struct signed by the operator.
-     * @param operatorSignature The operator signature of result
+     * @param transferResult The asset transfer transferResult struct signed by the operator.
+     * @param operatorSignature The operator signature of transferResult
      */
     function _finalize(
-        AssetTransferResult calldata result,
+        AssetTransferResult calldata transferResult,
         bytes calldata operatorSignature
     ) private {
-        Payment memory p = _payments[result.paymentId];
+        Payment memory p = _payments[transferResult.paymentId];
         require(
             p.state == State.AssetTransferring,
             "payment not initially in asset transferring state"
         );
         require(
-            verifyAssetTransferResult(result, operatorSignature, p.operator),
+            verifyAssetTransferResult(transferResult, operatorSignature, p.operator),
             "only the operator can sign an assetTransferResult"
         );
-        if (result.wasSuccessful) {
-            _finalizeSuccess(result.paymentId, p);
+        if (transferResult.wasSuccessful) {
+            _finalizeSuccess(transferResult.paymentId, p);
         } else {
-            _finalizeFailed(result.paymentId);
+            _finalizeFailed(transferResult.paymentId);
         }
     }
 
@@ -381,17 +381,17 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     }
 
     /// @inheritdoc IPaymentsERC20
-    function checkPaymentInputs(PaymentInput calldata inp) public view {
-        require(inp.feeBPS <= 10000, "fee cannot be larger than 100 percent");
+    function checkPaymentInputs(PaymentInput calldata payInput) public view {
+        require(payInput.feeBPS <= 10000, "fee cannot be larger than 100 percent");
         require(
-            paymentState(inp.paymentId) == State.NotStarted,
+            paymentState(payInput.paymentId) == State.NotStarted,
             "payment in incorrect curent state"
         );
-        require(block.timestamp <= inp.deadline, "payment deadline expired");
+        require(block.timestamp <= payInput.deadline, "payment deadline expired");
         if (_isSellerRegistrationRequired)
-            require(_isRegisteredSeller[inp.seller], "seller not registered");
+            require(_isRegisteredSeller[payInput.seller], "seller not registered");
         require(
-            enoughFundsAvailable(inp.buyer, inp.amount),
+            enoughFundsAvailable(payInput.buyer, payInput.amount),
             "not enough funds available for this buyer"
         );
     }
