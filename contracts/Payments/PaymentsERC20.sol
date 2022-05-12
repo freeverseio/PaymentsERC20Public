@@ -81,6 +81,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
 
     /// @inheritdoc IPaymentsERC20
     function registerAsSeller() external {
+        require(!_isRegisteredSeller[msg.sender], "seller already registered");
         _isRegisteredSeller[msg.sender] = true;
         emit NewSeller(msg.sender);
     }
