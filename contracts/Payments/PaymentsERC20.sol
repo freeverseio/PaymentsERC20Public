@@ -223,17 +223,17 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
         AssetTransferResult calldata transferResult,
         bytes calldata operatorSignature
     ) private {
-        Payment memory p = _payments[transferResult.paymentId];
+        Payment memory payment = _payments[transferResult.paymentId];
         require(
-            p.state == State.AssetTransferring,
+            payment.state == State.AssetTransferring,
             "payment not initially in asset transferring state"
         );
         require(
-            verifyAssetTransferResult(transferResult, operatorSignature, p.operator),
+            verifyAssetTransferResult(transferResult, operatorSignature, payment.operator),
             "only the operator can sign an assetTransferResult"
         );
         if (transferResult.wasSuccessful) {
-            _finalizeSuccess(transferResult.paymentId, p);
+            _finalizeSuccess(transferResult.paymentId, payment);
         } else {
             _finalizeFailed(transferResult.paymentId);
         }
@@ -243,13 +243,13 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
      * @dev (private) Updates the balance of the seller on successful asset transfer
      *  Moves the payment to PAID
      * @param paymentId The unique ID that identifies the payment.
-     * @param p The payment struct corresponding to paymentId
+     * @param payment The payment struct corresponding to paymentId
      */
-    function _finalizeSuccess(bytes32 paymentId, Payment memory p) private {
+    function _finalizeSuccess(bytes32 paymentId, Payment memory payment) private {
         _payments[paymentId].state = State.Paid;
-        uint256 feeAmount = computeFeeAmount(p.amount, uint256(p.feeBPS));
-        _balanceOf[p.seller] += (p.amount - feeAmount);
-        _balanceOf[p.feesCollector] += feeAmount;
+        uint256 feeAmount = computeFeeAmount(payment.amount, uint256(payment.feeBPS));
+        _balanceOf[payment.seller] += (payment.amount - feeAmount);
+        _balanceOf[payment.feesCollector] += feeAmount;
         emit Paid(paymentId);
     }
 
@@ -268,9 +268,9 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
      */
     function _refundToLocalBalance(bytes32 paymentId) private {
         _payments[paymentId].state = State.Refunded;
-        Payment memory p = _payments[paymentId];
-        _balanceOf[p.buyer] += p.amount;
-        emit BuyerRefunded(paymentId, p.buyer);
+        Payment memory payment = _payments[paymentId];
+        _balanceOf[payment.buyer] += payment.amount;
+        emit BuyerRefunded(paymentId, payment.buyer);
     }
 
     /**
