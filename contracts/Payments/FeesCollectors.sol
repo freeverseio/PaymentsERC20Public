@@ -18,8 +18,8 @@ import "./Operators.sol";
  */
 
 contract FeesCollectors is Operators {
-    event DefaultFeesCollector(address feesCollector);
-    event UniverseFeesCollector(uint256 universeId, address feesCollector);
+    event DefaultFeesCollector(address indexed feesCollector);
+    event UniverseFeesCollector(uint256 indexed universeId, address indexed feesCollector);
 
     address private _defaultFeesCollector;
     mapping(uint256 => address) private _universeFeesCollectors;
