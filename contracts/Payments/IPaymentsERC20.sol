@@ -52,7 +52,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
     event Paid(bytes32 paymentId);
     event Withdraw(address indexed user, uint256 amount);
 
-    enum States {
+    enum State {
         NotStarted,
         AssetTransferring,
         Refunded,
@@ -65,7 +65,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
      *  Examples:  2.5% = 250 bps, 10% = 1000 bps, 100% = 10000 bps
      */
     struct Payment {
-        States state;
+        State state;
         address buyer;
         address seller;
         address operator;
@@ -233,7 +233,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
      * @param paymentId The unique ID that identifies the payment.
      * @return the state of the payment.
      */
-    function paymentState(bytes32 paymentId) external view returns (States);
+    function paymentState(bytes32 paymentId) external view returns (State);
 
     /**
      * @notice Returns true if the payment accepts a refund to the buyer
