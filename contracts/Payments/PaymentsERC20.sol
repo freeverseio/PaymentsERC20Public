@@ -90,11 +90,12 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
         PaymentInput calldata inp,
         bytes calldata buyerSignature
     ) external {
+        address operator = universeOperator(inp.universeId);
         require(
-            universeOperator(inp.universeId) == msg.sender,
+            operator == msg.sender,
             "operator not authorized for this universeId"
         );
-        checkPaymentInputs(inp);
+        checkPaymentInputs(inp, operator);
         require(
             verifyPayment(inp, buyerSignature, inp.buyer),
             "incorrect buyer signature"
@@ -131,8 +132,8 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
             msg.sender == inp.buyer,
             "only buyer can execute this function"
         );
-        checkPaymentInputs(inp);
         address operator = universeOperator(inp.universeId);
+        checkPaymentInputs(inp, operator);
         require(
             verifyPayment(inp, operatorSignature, operator),
             "incorrect operator signature"
@@ -381,7 +382,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     }
 
     /// @inheritdoc IPaymentsERC20
-    function checkPaymentInputs(PaymentInput calldata inp) public view {
+    function checkPaymentInputs(PaymentInput calldata inp, address operator) public view {
         require(inp.feeBPS <= 10000, "fee cannot be larger than 100 percent");
         require(
             paymentState(inp.paymentId) == States.NotStarted,
@@ -393,6 +394,10 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
         require(
             enoughFundsAvailable(inp.buyer, inp.amount),
             "not enough funds available for this buyer"
+        );
+        require(
+            (operator != inp.buyer) && (operator != inp.seller),
+            "operator must be an observer"
         );
     }
 

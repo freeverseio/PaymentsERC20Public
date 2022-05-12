@@ -297,8 +297,9 @@ interface IPaymentsERC20 is IEIP712Verifier {
      * @notice Reverts unless the requirements for a PaymentInput that
      *  are common to both pay and relayedPay are fulfilled.
      * @param inp The PaymentInput struct
+     * @param operator The operator assigned to this payment
      */
-    function checkPaymentInputs(PaymentInput calldata inp) external view;
+    function checkPaymentInputs(PaymentInput calldata inp, address operator) external view;
 
     // PURE FUNCTIONS
 

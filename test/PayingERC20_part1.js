@@ -447,4 +447,30 @@ contract('CryptoPayments1', (accounts) => {
       Number(localFunds) + Number(pendingRequired),
     );
   });
+
+  it('Operator cannot coincide with buyer', async () => {
+    const paymentData2 = JSON.parse(JSON.stringify(paymentData));
+    paymentData2.buyer = operator;
+    await truffleAssert.reverts(
+      executeDirectPay(paymentData2, initialBuyerERC20, initialBuyerETH),
+      'operator must be an observer',
+    );
+    await truffleAssert.reverts(
+      executeRelayedPay(paymentData2, initialBuyerERC20, initialBuyerETH, operator),
+      'operator must be an observer',
+    );
+  });
+
+  it('Operator cannot coincide with seller', async () => {
+    const paymentData2 = JSON.parse(JSON.stringify(paymentData));
+    paymentData2.seller = operator;
+    await truffleAssert.reverts(
+      executeDirectPay(paymentData2, initialBuyerERC20, initialBuyerETH),
+      'operator must be an observer',
+    );
+    await truffleAssert.reverts(
+      executeRelayedPay(paymentData2, initialBuyerERC20, initialBuyerETH, operator),
+      'operator must be an observer',
+    );
+  });
 });
