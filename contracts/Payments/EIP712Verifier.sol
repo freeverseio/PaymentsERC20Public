@@ -18,7 +18,7 @@ contract EIP712Verifier is IEIP712Verifier, EIP712 {
     using ECDSA for bytes32;
     bytes32 private constant _TYPEHASH_PAYMENT =
         keccak256(
-            "PaymentInput(bytes32 paymentId,uint256 amount,uint16 feeBPS,uint256 universeId,uint256 deadline,address buyer,address seller)"
+            "PaymentInput(bytes32 paymentId,uint256 amount,uint256 feeBPS,uint256 universeId,uint256 deadline,address buyer,address seller)"
         );
 
     bytes32 private constant _TYPEHASH_ASSETTRANSFER =

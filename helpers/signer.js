@@ -8,7 +8,7 @@ const ERC712DomainTypes = [
 const PaymentInput = [
   { name: 'paymentId', type: 'bytes32' },
   { name: 'amount', type: 'uint256' },
-  { name: 'feeBPS', type: 'uint16' },
+  { name: 'feeBPS', type: 'uint256' },
   { name: 'universeId', type: 'uint256' },
   { name: 'deadline', type: 'uint256' },
   { name: 'buyer', type: 'address' },

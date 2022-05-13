@@ -257,7 +257,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
      */
     function _finalizeSuccess(bytes32 paymentId, Payment memory payment) private {
         _payments[paymentId].state = State.Paid;
-        uint256 feeAmount = computeFeeAmount(payment.amount, uint256(payment.feeBPS));
+        uint256 feeAmount = computeFeeAmount(payment.amount, payment.feeBPS);
         _balanceOf[payment.seller] += (payment.amount - feeAmount);
         _balanceOf[payment.feesCollector] += feeAmount;
         emit Paid(paymentId);

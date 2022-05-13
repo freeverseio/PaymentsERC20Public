@@ -133,7 +133,7 @@ contract('EIP712Verifier', (accounts) => {
   });
 
   it('payment signature matches expected explicit value - 1 / happy path', async () => {
-    const expectedSig = '0xb1a1d34d385dfb4f0b45cc0d48298b2395628765d2c2d9312c33fc4d86f540464ab6e469d351a1110b130cc04b25b86d928391fdad8d8206b5931d5662498b1d1c';
+    const expectedSig = '0xd2f452ccd8d25e2d783b67ea5ebdb2415d2e6589d31069a99534cfa09a4acc2553f49f4b63458963a7375ed424e6cbccd14fe34cf8931642ee3d1d59aeedb4471b';
     const hardcodedPrivKey = 'aaf06722787393a80c2079882825f9777f003949bb7d41af20c4efe64f6a31f3';
     const hardcodedChainId = 1;
     const hardcodedContractAddr = '0xf25186B5081Ff5cE73482AD761DB0eB0d25abfBF';
@@ -159,7 +159,7 @@ contract('EIP712Verifier', (accounts) => {
   });
 
   it('payment signature matches expected explicit value - 2 / empty universeId', async () => {
-    const expectedSig = '0x42f8d5808cf5e0ceac826b9bb4963acc999bbf51aa0f4df7dd5902dcb42ebef27dd7a0efa6798541759e867c0bdeaa953313f3a338f7af1def63b503143f35eb1c';
+    const expectedSig = '0xe4097cd9273d498c2c72370b8d0662f9565acabb9582d30b661883fe8b2fd07d595ba4832b1a6bc98c094bad91de9eecafe86b0d6a4cce4426e26f3a8c66b5cb1c';
     const hardcodedPrivKey = 'aaf06722787393a80c2079882825f9777f003949bb7d41af20c4efe64f6a31f3';
     const hardcodedChainId = 1337;
     const hardcodedContractAddr = '0xf25186B5081Ff5cE73482AD761DB0eB0d25abfBF';
@@ -185,7 +185,7 @@ contract('EIP712Verifier', (accounts) => {
   });
 
   it('payment signature matches expected explicit value - 3 / empty contractAddr', async () => {
-    const expectedSig = '0xb1c6c04d50a97181e8a112a7e7892458b3171cd939e149938f234576d050e4117ae25982ab18a82514f0b27d3bada01e7ca3ee8c5e8e5f19e59fd717da00cf0f1c';
+    const expectedSig = '0x406037090aa9098d625ddf2ba8a45133721e3762615c57cfd87dca3abf62b6eb2620841ad2f6cb1adc1c7e6b7516da5eb2ad1402cc45be59e29f3a906484550f1b';
     const hardcodedPrivKey = 'aaf06722787393a80c2079882825f9777f003949bb7d41af20c4efe64f6a31f3';
     const hardcodedChainId = 1337;
     const hardcodedContractAddr = '';

@@ -127,7 +127,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
 
         // the percentage fee expressed in Basis Points (bps), typical in finance
         // Examples:  2.5% = 250 bps, 10% = 1000 bps, 100% = 10000 bps
-        uint16 feeBPS;
+        uint256 feeBPS;
 
         // the price of the asset, an integer expressed in the
         // lowest unit of the ERC20 token.
