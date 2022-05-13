@@ -165,6 +165,10 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
         address operator
     ) private {
         checkPaymentInputs(inp);
+        require(
+            (operator != inp.buyer) && (operator != inp.seller),
+            "operator must be an observer"
+        );
         _payments[inp.paymentId] = Payment(
             States.AssetTransferring,
             inp.buyer,
