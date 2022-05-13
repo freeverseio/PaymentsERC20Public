@@ -29,7 +29,7 @@ contract EIP712Verifier is IEIP712Verifier, EIP712 {
 
     /// @inheritdoc IEIP712Verifier
     function verifyPayment(
-        PaymentInput calldata inp,
+        PaymentInput calldata payInput,
         bytes calldata signature,
         address signer
     ) public view returns (bool) {
@@ -37,13 +37,13 @@ contract EIP712Verifier is IEIP712Verifier, EIP712 {
             keccak256(
                 abi.encode(
                     _TYPEHASH_PAYMENT,
-                    inp.paymentId,
-                    inp.amount,
-                    inp.feeBPS,
-                    inp.universeId,
-                    inp.deadline,
-                    inp.buyer,
-                    inp.seller
+                    payInput.paymentId,
+                    payInput.amount,
+                    payInput.feeBPS,
+                    payInput.universeId,
+                    payInput.deadline,
+                    payInput.buyer,
+                    payInput.seller
                 )
             )
         ).recover(signature);
@@ -52,7 +52,7 @@ contract EIP712Verifier is IEIP712Verifier, EIP712 {
 
     /// @inheritdoc IEIP712Verifier
     function verifyAssetTransferResult(
-        AssetTransferResult calldata inp,
+        AssetTransferResult calldata transferResult,
         bytes calldata signature,
         address signer
     ) public view returns (bool) {
@@ -60,8 +60,8 @@ contract EIP712Verifier is IEIP712Verifier, EIP712 {
             keccak256(
                 abi.encode(
                     _TYPEHASH_ASSETTRANSFER,
-                    inp.paymentId,
-                    inp.wasSuccessful
+                    transferResult.paymentId,
+                    transferResult.wasSuccessful
                 )
             )
         ).recover(signature);

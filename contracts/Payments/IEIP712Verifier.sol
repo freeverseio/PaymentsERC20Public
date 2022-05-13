@@ -63,14 +63,14 @@ interface IEIP712Verifier {
     /**
      * @notice Verifies that the provided PaymentInput struct has been signed
      *  by the provided signer.
-     * @param inp The provided PaymentInput struct
+     * @param payInput The provided PaymentInput struct
      * @param signature The provided signature of the input struct
      * @param signer The signer's address that we want to verify
      * @return Returns true if the signature corresponds to the
      *  provided signer having signed the input struct
      */
     function verifyPayment(
-        PaymentInput calldata inp,
+        PaymentInput calldata payInput,
         bytes calldata signature,
         address signer
     ) external view returns (bool);
@@ -78,14 +78,14 @@ interface IEIP712Verifier {
     /**
      * @notice Verifies that the provided AssetTransferResult struct
      *  has been signed by the provided signer.
-     * @param result The provided AssetTransferResult struct
+     * @param transferResult The provided AssetTransferResult struct
      * @param signature The provided signature of the input struct
      * @param signer The signer's address that we want to verify
      * @return Returns true if the signature corresponds to the signer
      *  having signed the input struct
      */
     function verifyAssetTransferResult(
-        AssetTransferResult calldata result,
+        AssetTransferResult calldata transferResult,
         bytes calldata signature,
         address signer
     ) external view returns (bool);

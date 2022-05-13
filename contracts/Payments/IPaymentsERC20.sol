@@ -25,7 +25,7 @@ import "./EIP712Verifier.sol";
  * the contract reuses it, and only transfers the remainder required (if any)
  * from the external ERC20 contract.
  *
- * Each payment has the following States Machine:
+ * Each payment has the following State Machine:
  * - NOT_STARTED -> ASSET_TRANSFERRING, triggered by pay/relayedPay
  * - ASSET_TRANSFERRING -> PAID, triggered by relaying assetTransferSuccess signed by operator
  * - ASSET_TRANSFERRING -> REFUNDED, triggered by relaying assetTransferFailed signed by operator
@@ -90,7 +90,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
     /**
      * @dev The enum characterizing the possible states of a payment process
      */
-    enum States {
+    enum State {
         NotStarted,
         AssetTransferring,
         Refunded,
@@ -104,7 +104,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
      */
     struct Payment {
         // the current state of the payment process
-        States state;
+        State state;
 
         // the buyer, providing the required funds, who shall receive
         // the asset on a successful payment.
@@ -148,11 +148,11 @@ interface IPaymentsERC20 is IEIP712Verifier {
      *  Follows standard Checks-Effects-Interactions pattern
      *  to protect against re-entrancy attacks.
      *  Moves payment to ASSET_TRANSFERRING state.
-     * @param inp The struct containing all required payment data
-     * @param buyerSignature The signature of 'inp' by the buyer
+     * @param payInput The struct containing all required payment data
+     * @param buyerSignature The signature of 'payInput' by the buyer
      */
     function relayedPay(
-        PaymentInput calldata inp,
+        PaymentInput calldata payInput,
         bytes calldata buyerSignature
     ) external;
 
@@ -166,10 +166,10 @@ interface IPaymentsERC20 is IEIP712Verifier {
      *  Follows standard Checks-Effects-Interactions pattern
      *  to protect against re-entrancy attacks.
      *  Moves payment to ASSET_TRANSFERRING state.
-     * @param inp The struct containing all required payment data
-     * @param operatorSignature The signature of 'inp' by the operator
+     * @param payInput The struct containing all required payment data
+     * @param operatorSignature The signature of 'payInput' by the operator
      */
-    function pay(PaymentInput calldata inp, bytes calldata operatorSignature)
+    function pay(PaymentInput calldata payInput, bytes calldata operatorSignature)
         external;
 
     /**
@@ -178,11 +178,11 @@ interface IPaymentsERC20 is IEIP712Verifier {
      * @dev Can be executed by anyone, but the operator signature must be included as input param.
      *  Seller or Buyer's balances are updated, allowing explicit withdrawal.
      *  Moves payment to PAID or REFUNDED state on transfer success/failure, respectively.
-     * @param result The asset transfer result struct signed by the operator.
+     * @param transferResult The asset transfer result struct signed by the operator.
      * @param operatorSignature The operator signature of result
      */
     function finalize(
-        AssetTransferResult calldata result,
+        AssetTransferResult calldata transferResult,
         bytes calldata operatorSignature
     ) external;
 
@@ -194,11 +194,11 @@ interface IPaymentsERC20 is IEIP712Verifier {
      *  It is, however, expected to be executed by the seller, in case of a successful asset transfer,
      *  or the buyer, in case of a failed asset transfer.
      *  Moves payment to PAID or REFUNDED state on transfer success/failure, respectively.
-     * @param result The asset transfer result struct signed by the operator.
+     * @param transferResult The asset transfer result struct signed by the operator.
      * @param operatorSignature The operator signature of result
      */
     function finalizeAndWithdraw(
-        AssetTransferResult calldata result,
+        AssetTransferResult calldata transferResult,
         bytes calldata operatorSignature
     ) external;
 
@@ -291,7 +291,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
      * @param paymentId The unique ID that identifies the payment.
      * @return the state of the payment.
      */
-    function paymentState(bytes32 paymentId) external view returns (States);
+    function paymentState(bytes32 paymentId) external view returns (State);
 
     /**
      * @notice Returns true if the payment accepts a refund to the buyer
@@ -354,9 +354,9 @@ interface IPaymentsERC20 is IEIP712Verifier {
     /**
      * @notice Reverts unless the requirements for a PaymentInput that
      *  are common to both pay and relayedPay are fulfilled.
-     * @param inp The PaymentInput struct
+     * @param payInput The PaymentInput struct
      */
-    function checkPaymentInputs(PaymentInput calldata inp) external view;
+    function checkPaymentInputs(PaymentInput calldata payInput) external view;
 
     // PURE FUNCTIONS
 
