@@ -10,11 +10,11 @@ import "./IEIP712Verifier.sol";
  * @title Interface to Payments Contract in ERC20.
  * @author Freeverse.io, www.freeverse.io
  * @dev Upon transfer of ERC20 tokens to this contract, these remain
- * locked until an Operator confirms the success of failure of the
+ * locked until an Operator confirms the success or failure of the
  * asset transfer required to fulfil this payment.
  *
  * If no confirmation is received from the operator during the PaymentWindow,
- * all of buyer's received tokens are made available to the buyer for refund.
+ * all tokens received from the buyer are made available to the buyer for refund.
  *
  * To start a payment, one of the following two methods needs to be called:
  * - in the 'pay' method, the buyer is the msg.sender (the buyer therefore signs the TX),
@@ -24,7 +24,7 @@ import "./IEIP712Verifier.sol";
  *
  * This contract maintains the balances of all users, it does not transfer them automatically.
  * Users need to explicitly call the 'withdraw' method, which withdraws balanceOf[msg.sender]
- * If a buyer has non-zero local balance at the moment of starting a new payment,
+ * If a buyer has a non-zero local balance at the moment of starting a new payment,
  * the contract reuses it, and only transfers the remainder required (if any)
  * from the external ERC20 contract.
  *
@@ -34,9 +34,9 @@ import "./IEIP712Verifier.sol";
  * - ASSET_TRANSFERRING -> REFUNDED, triggered by relaying assetTransferFailed signed by operator
  * - ASSET_TRANSFERRING -> REFUNDED, triggered by a refund request after expirationTime
  *
- * NOTE: To ensure that the a payment process proceeds as expected when the payment starts,
+ * NOTE: To ensure that the payment process proceeds as expected when the payment starts,
  * upon acceptance of a pay/relayedPay, the following data: {operator, feesCollector, expirationTime}
- * is stored in the payment struct, and used throught the payment, regardless of
+ * is stored in the payment struct, and used throughout the payment, regardless of
  * any possible modifications to the contract's storage.
  *
  */
@@ -68,7 +68,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
      * @param buyer The address of the buyer providing the funds
      * @param seller The address of the seller of the asset
      */
-    event Payin(
+    event PayIn(
         bytes32 indexed paymentId,
         address indexed buyer,
         address indexed seller
@@ -290,7 +290,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
     /**
      * @notice Returns the state of a payment.
      * @dev If payment is in ASSET_TRANSFERRING, it may be worth
-     *  checking acceptsRefunds ot check if it has gone beyond expirationTime.
+     *  checking acceptsRefunds to check if it has gone beyond expirationTime.
      * @param paymentId The unique ID that identifies the payment.
      * @return the state of the payment.
      */

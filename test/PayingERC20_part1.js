@@ -203,7 +203,7 @@ contract('CryptoPayments1', (accounts) => {
 
   it('Events are emitted in a relayedPay', async () => {
     await executeRelayedPay(paymentData, initialBuyerERC20, initialBuyerETH, operator);
-    const past = await payments.getPastEvents('Payin', { fromBlock: 0, toBlock: 'latest' }).should.be.fulfilled;
+    const past = await payments.getPastEvents('PayIn', { fromBlock: 0, toBlock: 'latest' }).should.be.fulfilled;
     assert.equal(past[0].args.paymentId, paymentData.paymentId);
     assert.equal(past[0].args.buyer, paymentData.buyer);
     assert.equal(past[0].args.seller, paymentData.seller);
@@ -211,7 +211,7 @@ contract('CryptoPayments1', (accounts) => {
 
   it('Events are emitted in a direct pay', async () => {
     await executeDirectPay(paymentData, initialBuyerERC20, initialBuyerETH);
-    const past = await payments.getPastEvents('Payin', { fromBlock: 0, toBlock: 'latest' }).should.be.fulfilled;
+    const past = await payments.getPastEvents('PayIn', { fromBlock: 0, toBlock: 'latest' }).should.be.fulfilled;
     assert.equal(past[0].args.paymentId, paymentData.paymentId);
     assert.equal(past[0].args.buyer, paymentData.buyer);
     assert.equal(past[0].args.seller, paymentData.seller);
