@@ -623,12 +623,12 @@ contract('CryptoPayments2', (accounts) => {
   });
 
   it('ASSET_TRANSFERRING blocks another Direct Payment', async () => {
-    const signature = await executeRelayedPay(
+    await executeRelayedPay(
       paymentData, initialBuyerERC20, initialBuyerETH, operator,
     );
     assert.equal(await payments.paymentState(paymentData.paymentId), ASSET_TRANSFERRING);
     await truffleAssert.reverts(
-      payments.pay(paymentData, signature, { from: paymentData.buyer }),
+      executeDirectPay(paymentData, initialBuyerERC20, initialBuyerETH),
       'payment in incorrect curent state',
     );
   });
@@ -711,16 +711,25 @@ contract('CryptoPayments2', (accounts) => {
     // And also funding Carol with ETH so that she can approve
     await provideFunds(deployer, buyerAccount.address, initialBuyerETH);
 
+    const signature = ethSigUtil.signTypedMessage(
+      fromHexString(buyerPrivKey.slice(2)),
+      prepareDataToSignPayment({
+        msg: paymentData,
+        chainId: await web3.eth.getChainId(),
+        contractAddress: payments.address,
+      }),
+    );
+
     // should fail unless seller is registerd
     await truffleAssert.reverts(
-      payments.relayedPay(paymentData, dummySignature, { from: operator }),
+      payments.relayedPay(paymentData, signature, { from: operator }),
       'seller not registered',
     );
     await payments.registerAsSeller({ from: paymentData.seller }).should.be.fulfilled;
 
     // should fail unless buyer has approved an allowance to the payments contract
     await truffleAssert.reverts(
-      payments.relayedPay(paymentData, dummySignature, { from: operator }),
+      payments.relayedPay(paymentData, signature, { from: operator }),
       'not enough funds available for this buyer',
     );
 
@@ -731,7 +740,7 @@ contract('CryptoPayments2', (accounts) => {
     ).should.be.fulfilled;
 
     await truffleAssert.reverts(
-      payments.relayedPay(paymentData, dummySignature, { from: operator }),
+      payments.relayedPay(paymentData, signature, { from: operator }),
       'not enough funds available for this buyer',
     );
 
@@ -748,7 +757,7 @@ contract('CryptoPayments2', (accounts) => {
     const wrongPaymentData2 = JSON.parse(JSON.stringify(paymentData));
     wrongPaymentData2.feeBPS = 10100;
     await truffleAssert.reverts(
-      payments.relayedPay(wrongPaymentData2, dummySignature, { from: operator }),
+      executeRelayedPay(wrongPaymentData2, initialBuyerERC20, initialBuyerETH, operator),
       'fee cannot be larger than 100 percent',
     );
 
@@ -756,14 +765,6 @@ contract('CryptoPayments2', (accounts) => {
     await truffleAssert.reverts(
       payments.relayedPay(paymentData, dummySignature, { from: operator }),
       'incorrect buyer signature',
-    );
-    const signature = ethSigUtil.signTypedMessage(
-      fromHexString(buyerPrivKey.slice(2)),
-      prepareDataToSignPayment({
-        msg: paymentData,
-        chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
-      }),
     );
 
     // fails unless operator is authorized
@@ -789,22 +790,31 @@ contract('CryptoPayments2', (accounts) => {
     // And also funding Carol with ETH so that she can approve
     await provideFunds(deployer, buyerAccount.address, initialBuyerETH);
 
+    const signature = ethSigUtil.signTypedMessage(
+      fromHexString(operatorPrivKey.slice(2)),
+      prepareDataToSignPayment({
+        msg: paymentData,
+        chainId: await web3.eth.getChainId(),
+        contractAddress: payments.address,
+      }),
+    );
+
     // should fail unless the buyer is the sender of the TX
     await truffleAssert.reverts(
-      payments.pay(paymentData, dummySignature, { from: operator }),
+      payments.pay(paymentData, signature, { from: operator }),
       'only buyer can execute this function',
     );
 
     // should fail unless seller is registered
     await truffleAssert.reverts(
-      payments.pay(paymentData, dummySignature, { from: paymentData.buyer }),
+      payments.pay(paymentData, signature, { from: paymentData.buyer }),
       'seller not registered',
     );
     await payments.registerAsSeller({ from: paymentData.seller }).should.be.fulfilled;
 
     // should fail unless buyer has approved an allowance to the payments contract
     await truffleAssert.reverts(
-      payments.pay(paymentData, dummySignature, { from: paymentData.buyer }),
+      payments.pay(paymentData, signature, { from: paymentData.buyer }),
       'not enough funds available for this buyer',
     );
 
@@ -815,7 +825,7 @@ contract('CryptoPayments2', (accounts) => {
     ).should.be.fulfilled;
 
     await truffleAssert.reverts(
-      payments.pay(paymentData, dummySignature, { from: paymentData.buyer }),
+      payments.pay(paymentData, signature, { from: paymentData.buyer }),
       'not enough funds available for this buyer',
     );
 
@@ -832,7 +842,7 @@ contract('CryptoPayments2', (accounts) => {
     const wrongPaymentData2 = JSON.parse(JSON.stringify(paymentData));
     wrongPaymentData2.feeBPS = 10100;
     await truffleAssert.reverts(
-      payments.pay(wrongPaymentData2, dummySignature, { from: paymentData.buyer }),
+      executeDirectPay(wrongPaymentData2, initialBuyerERC20, initialBuyerETH),
       'fee cannot be larger than 100 percent',
     );
 
@@ -840,15 +850,6 @@ contract('CryptoPayments2', (accounts) => {
     await truffleAssert.reverts(
       payments.pay(paymentData, dummySignature, { from: paymentData.buyer }),
       'incorrect operator signature',
-    );
-
-    const signature = ethSigUtil.signTypedMessage(
-      fromHexString(operatorPrivKey.slice(2)),
-      prepareDataToSignPayment({
-        msg: paymentData,
-        chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
-      }),
     );
 
     // it finally is accepted
