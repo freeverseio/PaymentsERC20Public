@@ -25,7 +25,7 @@ import "./EIP712Verifier.sol";
  * the contract reuses it, and only transfers the remainder required (if any)
  * from the external ERC20 contract.
  *
- * Each payment has the following States Machine:
+ * Each payment has the following State Machine:
  * - NOT_STARTED -> ASSET_TRANSFERRING, triggered by pay/relayedPay
  * - ASSET_TRANSFERRING -> PAID, triggered by relaying assetTransferSuccess signed by operator
  * - ASSET_TRANSFERRING -> REFUNDED, triggered by relaying assetTransferFailed signed by operator
@@ -175,7 +175,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
             "operator must be an observer"
         );
         _payments[inp.paymentId] = Payment(
-            States.AssetTransferring,
+            State.AssetTransferring,
             inp.buyer,
             inp.seller,
             operator,
@@ -226,7 +226,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     ) private {
         Payment memory p = _payments[result.paymentId];
         require(
-            p.state == States.AssetTransferring,
+            p.state == State.AssetTransferring,
             "payment not initially in asset transferring state"
         );
         require(
@@ -247,7 +247,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
      * @param p The payment struct corresponding to paymentId
      */
     function _finalizeSuccess(bytes32 paymentId, Payment memory p) private {
-        _payments[paymentId].state = States.Paid;
+        _payments[paymentId].state = State.Paid;
         uint256 feeAmount = computeFeeAmount(p.amount, uint256(p.feeBPS));
         _balanceOf[p.seller] += (p.amount - feeAmount);
         _balanceOf[p.feesCollector] += feeAmount;
@@ -268,7 +268,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
      * @param paymentId The unique ID that identifies the payment.
      */
     function _refundToLocalBalance(bytes32 paymentId) private {
-        _payments[paymentId].state = States.Refunded;
+        _payments[paymentId].state = State.Refunded;
         Payment memory p = _payments[paymentId];
         _balanceOf[p.buyer] += p.amount;
         emit BuyerRefunded(paymentId, p.buyer);
@@ -330,14 +330,14 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     }
 
     /// @inheritdoc IPaymentsERC20
-    function paymentState(bytes32 paymentId) public view returns (States) {
+    function paymentState(bytes32 paymentId) public view returns (State) {
         return _payments[paymentId].state;
     }
 
     /// @inheritdoc IPaymentsERC20
     function acceptsRefunds(bytes32 paymentId) public view returns (bool) {
         return
-            (paymentState(paymentId) == States.AssetTransferring) &&
+            (paymentState(paymentId) == State.AssetTransferring) &&
             (block.timestamp > _payments[paymentId].expirationTime);
     }
 
@@ -385,7 +385,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     function checkPaymentInputs(PaymentInput calldata inp) public view {
         require(inp.feeBPS <= 10000, "fee cannot be larger than 100 percent");
         require(
-            paymentState(inp.paymentId) == States.NotStarted,
+            paymentState(inp.paymentId) == State.NotStarted,
             "payment in incorrect curent state"
         );
         require(block.timestamp <= inp.deadline, "payment deadline expired");

@@ -25,7 +25,7 @@ import "./EIP712Verifier.sol";
  * the contract reuses it, and only transfers the remainder required (if any)
  * from the external ERC20 contract.
  *
- * Each payment has the following States Machine:
+ * Each payment has the following State Machine:
  * - NOT_STARTED -> ASSET_TRANSFERRING, triggered by pay/relayedPay
  * - ASSET_TRANSFERRING -> PAID, triggered by relaying assetTransferSuccess signed by operator
  * - ASSET_TRANSFERRING -> REFUNDED, triggered by relaying assetTransferFailed signed by operator
@@ -90,7 +90,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
     /**
      * @dev The enum characterizing the possible states of a payment process
      */
-    enum States {
+    enum State {
         NotStarted,
         AssetTransferring,
         Refunded,
@@ -104,7 +104,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
      */
     struct Payment {
         // the current state of the payment process
-        States state;
+        State state;
 
         // the buyer, providing the required funds, who shall receive
         // the asset on a successful payment.
@@ -291,7 +291,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
      * @param paymentId The unique ID that identifies the payment.
      * @return the state of the payment.
      */
-    function paymentState(bytes32 paymentId) external view returns (States);
+    function paymentState(bytes32 paymentId) external view returns (State);
 
     /**
      * @notice Returns true if the payment accepts a refund to the buyer
