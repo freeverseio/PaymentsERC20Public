@@ -312,13 +312,59 @@ contract('CryptoPayments2', (accounts) => {
 
     // the feescollector has collected 3 fees
     expectedERC20FeesCollector.iadd(toBN(3 * feeAmount));
-    expectedERC20Seller = toBN(2 * sellerAmount);
-    expectedERC20Bob = toBN(sellerAmount);
+    const expectedERC20Seller = toBN(2 * sellerAmount);
+    const expectedERC20Bob = toBN(sellerAmount);
 
     await assertBalances(
       erc20,
       [paymentData.seller, bob, feesCollector],
       [expectedERC20Seller, expectedERC20Bob, expectedERC20FeesCollector],
+    );
+  });
+
+  it('Withdraw of portion of available funds works', async () => {
+    await executeRelayedPay(paymentData, initialBuyerERC20, initialBuyerETH, operator);
+    await finalize(paymentData.paymentId, true, operatorPrivKey);
+
+    const feeAmount = Math.floor(Number(paymentData.amount) * paymentData.feeBPS) / 10000;
+    const sellerAmount = Number(paymentData.amount) - feeAmount;
+
+    // seller withdraws all local balance except for 20 tokens
+    const amountToWithdraw = sellerAmount - 20;
+    await payments.withdrawAmount(amountToWithdraw, { from: paymentData.seller });
+
+    // seller should have 20 tokens in local balance, and the amount withdrawn in the ERC20 contract
+    const expectedERC20Seller = toBN(amountToWithdraw);
+    const expectedLocalBalanceSeller = toBN(20);
+
+    await assertBalances(
+      erc20,
+      [paymentData.seller],
+      [expectedERC20Seller],
+    );
+
+    await assertBalances(
+      payments,
+      [paymentData.seller],
+      [expectedLocalBalanceSeller],
+    );
+
+    // seller can further withdraw 5 more
+    await payments.withdrawAmount(5, { from: paymentData.seller });
+
+    expectedERC20Seller.iadd(toBN(5));
+    expectedLocalBalanceSeller.isub(toBN(5));
+
+    await assertBalances(
+      erc20,
+      [paymentData.seller],
+      [expectedERC20Seller],
+    );
+
+    await assertBalances(
+      payments,
+      [paymentData.seller],
+      [expectedLocalBalanceSeller],
     );
   });
 

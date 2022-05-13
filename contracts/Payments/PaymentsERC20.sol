@@ -165,6 +165,15 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verif
         _withdraw();
     }
 
+    /// @inheritdoc IPaymentsERC20
+    function withdrawAmount(uint256 amount) external {
+        uint256 balance = _balanceOf[msg.sender];
+        require(balance >= amount, "not enough balance to withdraw specified amount");
+        _balanceOf[msg.sender] = (balance - amount);
+        IERC20(_erc20).transfer(msg.sender, amount);
+        emit Withdraw(msg.sender, amount);
+    }
+
     // PRIVATE FUNCTIONS
     /**
      * @dev (private) Checks payment input parameters,
