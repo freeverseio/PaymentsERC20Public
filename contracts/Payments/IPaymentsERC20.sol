@@ -16,9 +16,11 @@ import "./IEIP712Verifier.sol";
  * If no confirmation is received from the operator during the PaymentWindow,
  * all of buyer's received tokens are made available to the buyer for refund.
  *
- * To start a payment, the signatures of both the buyer and the Operator are required.
- * - in the 'relayedPay' method, the Operator is the msg.sender, and the buyerSig is provided;
- * - in the 'pay' method, the buyer is the msg.sender, and the operatorSig is provided.
+ * To start a payment, one of the following two methods needs to be called:
+ * - in the 'pay' method, the buyer is the msg.sender (the buyer therefore signs the TX),
+ *   and the operator's EIP712-signature of the PaymentInput struct is provided as input to the call.
+ * - in the 'relayedPay' method, the operator is the msg.sender (the operator therefore signs the TX),
+ *   and the buyer's EIP712-signature of the PaymentInput struct is provided as input to the call.
  *
  * This contract maintains the balances of all users, it does not transfer them automatically.
  * Users need to explicitly call the 'withdraw' method, which withdraws balanceOf[msg.sender]
