@@ -19,8 +19,8 @@ import "openzeppelin-solidity/contracts/access/Ownable.sol";
  */
 
 contract Operators is Ownable {
-    event DefaultOperator(address operator);
-    event UniverseOperator(uint256 universeId, address operator);
+    event DefaultOperator(address indexed operator);
+    event UniverseOperator(uint256 indexed universeId, address indexed operator);
 
     address private _defaultOperator;
     mapping(uint256 => address) private _universeOperators;
