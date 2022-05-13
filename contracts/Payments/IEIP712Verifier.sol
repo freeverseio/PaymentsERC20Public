@@ -29,7 +29,7 @@ interface IEIP712Verifier {
 
         // the fee that will be charged by the feeOperator,
         // expressed as percentage Basis Points (bps), applied to amount.
-        uint16 feeBPS;
+        uint256 feeBPS;
 
         // the id of the universe that the asset belongs to.
         uint256 universeId;
