@@ -49,7 +49,7 @@ import "./EIP712Verifier.sol";
 import "./IPaymentsERC20.sol";
 
 contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
-    address private _erc20;
+    address private immutable _erc20;
     string private _acceptedCurrency;
     uint256 private _paymentWindow;
     bool private _isSellerRegistrationRequired;
