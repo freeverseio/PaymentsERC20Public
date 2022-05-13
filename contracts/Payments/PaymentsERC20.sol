@@ -63,6 +63,10 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
      * @param window The amount of time available, in seconds.
      */
     function setPaymentWindow(uint256 window) external onlyOwner {
+        require(
+            (window < 60 days) && (window > 3 hours),
+            "payment window outside limits"
+        );
         _paymentWindow = window;
         emit PaymentWindow(window);
     }

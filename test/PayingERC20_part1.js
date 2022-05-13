@@ -286,7 +286,7 @@ contract('CryptoPayments1', (accounts) => {
     assert.equal(await payments.isSellerRegistrationRequired(), true);
   });
 
-  it('Set payment window', async () => {
+  it('Set payment window works if within limits', async () => {
     const newVal = 12345;
     await truffleAssert.reverts(
       payments.setPaymentWindow(newVal, { from: alice }),
@@ -298,6 +298,24 @@ contract('CryptoPayments1', (accounts) => {
     // check event
     const past = await payments.getPastEvents('PaymentWindow', { fromBlock: 0, toBlock: 'latest' }).should.be.fulfilled;
     assert.equal(past[0].args.window, newVal);
+  });
+
+  it('Set payment window fails if below limit', async () => {
+    const oneHour = 3600;
+    await truffleAssert.reverts(
+      payments.setPaymentWindow(3 * oneHour - 1, { from: deployer }),
+      'payment window outside limits',
+    );
+    await payments.setPaymentWindow(3 * oneHour + 1, { from: deployer }).should.be.fulfilled;
+  });
+
+  it('Set payment window fails if above limit', async () => {
+    const oneDay = 24 * 3600;
+    await truffleAssert.reverts(
+      payments.setPaymentWindow(60 * oneDay + 1, { from: deployer }),
+      'payment window outside limits',
+    );
+    await payments.setPaymentWindow(60 * oneDay - 1, { from: deployer }).should.be.fulfilled;
   });
 
   it('Test fee computation', async () => {
