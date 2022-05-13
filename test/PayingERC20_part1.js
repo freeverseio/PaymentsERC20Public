@@ -253,6 +253,14 @@ contract('CryptoPayments1', (accounts) => {
     assert.equal(past[0].args.seller, alice);
   });
 
+  it('Sellers cannot register more than once', async () => {
+    await payments.registerAsSeller({ from: alice }).should.be.fulfilled;
+    await truffleAssert.reverts(
+      payments.registerAsSeller({ from: alice }),
+      'seller already registered',
+    );
+  });
+
   it('ERC20 deploys with expected storage', async () => {
     assert.equal(await erc20.name(), name);
     assert.equal(await erc20.symbol(), symbol);
