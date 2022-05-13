@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.12;
 
-import "./Operators.sol";
+import "openzeppelin-solidity/contracts/access/Ownable.sol";
 
 /**
  * @title Management of Fees Collectors.
@@ -17,7 +17,7 @@ import "./Operators.sol";
  * the default feesCollector is used.
  */
 
-contract FeesCollectors is Operators {
+contract FeesCollectors is Ownable {
     /**
      * @dev Event emitted on change of default feesCollector
      * @param feesCollector The address of the new default feesCollector
