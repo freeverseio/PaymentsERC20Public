@@ -188,7 +188,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
         _balanceOf[inp.buyer] -= localFunds;
         emit Payin(inp.paymentId, inp.buyer, inp.seller);
     }
-    
+
     /**
      * @dev (private) Moves the payment funds to the buyer's local balance
      *  The buyer still needs to withdraw afterwards.
@@ -302,7 +302,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     }
 
     /// @inheritdoc IPaymentsERC20
-    function erc20BalanceOf(address addr) external view returns (uint256) {
+    function erc20BalanceOf(address addr) public view returns (uint256) {
         return IERC20(_erc20).balanceOf(addr);
     }
 
@@ -354,7 +354,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     /// @inheritdoc IPaymentsERC20
     function maxFundsAvailable(address buyer) public view returns (uint256) {
         uint256 approved = allowance(buyer);
-        uint256 erc20Balance = IERC20(_erc20).balanceOf(buyer);
+        uint256 erc20Balance = erc20BalanceOf(buyer);
         uint256 externalAvailable = (approved < erc20Balance)
             ? approved
             : erc20Balance;
