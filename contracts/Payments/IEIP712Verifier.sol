@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.12;
 
-import "openzeppelin-solidity/contracts/utils/cryptography/draft-EIP712.sol";
-import "openzeppelin-solidity/contracts/utils/cryptography/ECDSA.sol";
-
 /**
  * @title Interface to Verification of MetaTXs for Payments using EIP712.
  * @author Freeverse.io, www.freeverse.io

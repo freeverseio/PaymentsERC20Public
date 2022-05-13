@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.12;
 
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "./FeesCollectors.sol";
-import "./EIP712Verifier.sol";
 import "./IEIP712Verifier.sol";
 
 /**
