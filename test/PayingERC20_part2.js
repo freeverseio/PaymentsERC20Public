@@ -112,7 +112,6 @@ contract('CryptoPayments2', (accounts) => {
     // Prepare Carol to be a buyer: fund her with ERC20, with ETH, and register her as seller
     await erc20.transfer(_paymentData.buyer, _initialBuyerERC20, { from: _operator });
     await provideFunds(_operator, buyerAccount.address, _initialBuyerETH);
-    await payments.registerAsSeller({ from: _paymentData.seller }).should.be.fulfilled;
 
     // Buyer approves purchase allowance
     await erc20.approve(
@@ -140,7 +139,6 @@ contract('CryptoPayments2', (accounts) => {
     // Prepare Carol to be a buyer: fund her with ERC20, with ETH, and register her as seller
     await erc20.transfer(_paymentData.buyer, _initialBuyerERC20, { from: deployer });
     await provideFunds(deployer, buyerAccount.address, _initialBuyerETH);
-    await payments.registerAsSeller({ from: _paymentData.seller }).should.be.fulfilled;
 
     // Buyer approves purchase allowance
     await erc20.approve(
