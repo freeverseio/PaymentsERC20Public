@@ -4,6 +4,7 @@ pragma solidity =0.8.12;
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "./FeesCollectors.sol";
 import "./EIP712Verifier.sol";
+import "./IEIP712Verifier.sol";
 
 /**
  * @title Interface to Payments Contract in ERC20.
@@ -37,8 +38,6 @@ import "./EIP712Verifier.sol";
  * any possible modifications to the contract's storage.
  *
  */
-
-import "./IEIP712Verifier.sol";
 
 interface IPaymentsERC20 is IEIP712Verifier {
     /**

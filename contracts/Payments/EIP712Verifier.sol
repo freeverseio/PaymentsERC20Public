@@ -3,6 +3,7 @@ pragma solidity =0.8.12;
 
 import "openzeppelin-solidity/contracts/utils/cryptography/draft-EIP712.sol";
 import "openzeppelin-solidity/contracts/utils/cryptography/ECDSA.sol";
+import "./IEIP712Verifier.sol";
 
 /**
  * @title Verification of MetaTXs for Payments using EIP712.
@@ -12,8 +13,6 @@ import "openzeppelin-solidity/contracts/utils/cryptography/ECDSA.sol";
  *  AssetTransferResult: to let the operator confirm success/failure of an asset transfer
  *  It exposes the corresponding verify functions, using the EIP712 code by OpenZeppelin
  */
-
-import "./IEIP712Verifier.sol";
 
 contract EIP712Verifier is IEIP712Verifier, EIP712 {
     using ECDSA for bytes32;

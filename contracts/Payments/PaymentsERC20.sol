@@ -4,6 +4,7 @@ pragma solidity =0.8.12;
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "./FeesCollectors.sol";
 import "./EIP712Verifier.sol";
+import "./IPaymentsERC20.sol";
 
 /**
  * @title Payments Contract in ERC20.
@@ -45,8 +46,6 @@ import "./EIP712Verifier.sol";
  * - If _isSellerRegistrationRequired = false, this feature is disabled, and payments can be initiated
  *    regardless of any previous call to the registerAsSeller method.
  */
-
-import "./IPaymentsERC20.sol";
 
 contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     address private immutable _erc20;
