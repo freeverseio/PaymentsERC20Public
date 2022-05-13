@@ -134,7 +134,9 @@ interface IPaymentsERC20 is IEIP712Verifier {
     }
 
     /**
-     * @notice Registers msg.sender as seller so that he/she can accept payments.
+     * @notice Registers msg.sender as seller so that, if the contract has set
+     *  _isSellerRegistrationRequired = true, then payments will be accepted with
+     *  msg.sender as seller.
      */
     function registerAsSeller() external;
 

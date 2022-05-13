@@ -36,6 +36,14 @@ import "./EIP712Verifier.sol";
  * is stored in the payment struct, and used throught the payment, regardless of
  * any possible modifications to the contract's storage.
  *
+ * NOTE: The contract allows a feature, 'Seller Registration', that can be used in the scenario that
+ * applications want users to prove that they have enough crypto know-how (obtain native crypto,
+ * pay for gas using a web3 wallet, etc.) to interact by themselves with this smart contract before selling,
+ * so that they are less likely to require technical help in case they need to withdraw funds. 
+ * - If _isSellerRegistrationRequired = true, this feature is enabled, and payments can only be initiated
+ *    if the payment seller has previously exectuted the registerAsSeller method.
+ * - If _isSellerRegistrationRequired = false, this feature is disabled, and payments can be initiated
+ *    regardless of any previous call to the registerAsSeller method.
  */
 
 import "./IPaymentsERC20.sol";
