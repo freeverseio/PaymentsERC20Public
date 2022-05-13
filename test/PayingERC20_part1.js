@@ -447,4 +447,56 @@ contract('CryptoPayments1', (accounts) => {
       Number(localFunds) + Number(pendingRequired),
     );
   });
+
+  it('Operator cannot coincide with buyer in directPay nor relayedPay', async () => {
+    // Prepare paymentData where the buyer coincides with the operator:
+    const paymentData2 = JSON.parse(JSON.stringify(paymentData));
+    paymentData2.buyer = operator;
+
+    // Fails on a directPay:
+    await truffleAssert.reverts(
+      executeDirectPay(paymentData2, initialBuyerERC20, initialBuyerETH),
+      'operator must be an observer',
+    );
+
+    // Fails on a relayedPay:
+    const signature = ethSigUtil.signTypedMessage(
+      fromHexString(operatorPrivKey.slice(2)),
+      prepareDataToSignPayment({
+        msg: paymentData2,
+        chainId: await web3.eth.getChainId(),
+        contractAddress: payments.address,
+      }),
+    );
+    await truffleAssert.reverts(
+      payments.relayedPay(paymentData2, signature, { from: operator }),
+      'operator must be an observer',
+    );
+  });
+
+  it('Operator cannot coincide with seller in directPay nor relayedPay', async () => {
+    // Prepare paymentData where the seller coincides with the operator:
+    const paymentData2 = JSON.parse(JSON.stringify(paymentData));
+    paymentData2.seller = operator;
+
+    // Fails on a directPay:
+    await truffleAssert.reverts(
+      executeDirectPay(paymentData2, initialBuyerERC20, initialBuyerETH),
+      'operator must be an observer',
+    );
+
+    // Fails on a relayedPay:
+    const signature = ethSigUtil.signTypedMessage(
+      fromHexString(buyerPrivKey.slice(2)),
+      prepareDataToSignPayment({
+        msg: paymentData2,
+        chainId: await web3.eth.getChainId(),
+        contractAddress: payments.address,
+      }),
+    );
+    await truffleAssert.reverts(
+      payments.relayedPay(paymentData2, signature, { from: operator }),
+      'operator must be an observer',
+    );
+  });
 });
