@@ -19,10 +19,23 @@ import "openzeppelin-solidity/contracts/access/Ownable.sol";
  */
 
 contract Operators is Ownable {
+    /**
+     * @dev Event emitted on change of default operator
+     * @param operator The address of the new default operator
+     */
     event DefaultOperator(address indexed operator);
+
+    /**
+     * @dev Event emitted on change of a specific universe operator
+     * @param universeId The id of the universe
+     * @param operator The address of the new universe operator
+     */
     event UniverseOperator(uint256 indexed universeId, address indexed operator);
 
+    /// @dev The address of the default operator:
     address private _defaultOperator;
+
+    /// @dev The mapping from universeId to specific universe operator:
     mapping(uint256 => address) private _universeOperators;
 
     constructor() {
@@ -30,11 +43,20 @@ contract Operators is Ownable {
         emit DefaultOperator(msg.sender);
     }
 
+    /**
+     * @dev Sets a new default operator
+     * @param operator The address of the new default operator
+     */
     function setDefaultOperator(address operator) external onlyOwner {
         _defaultOperator = operator;
         emit DefaultOperator(operator);
     }
 
+    /**
+     * @dev Sets a new specific universe operator
+     * @param universeId The id of the universe
+     * @param operator The address of the new universe operator
+     */
     function setUniverseOperator(uint256 universeId, address operator)
         external
         onlyOwner
@@ -43,15 +65,27 @@ contract Operators is Ownable {
         emit UniverseOperator(universeId, operator);
     }
 
+    /**
+     * @dev Removes a specific universe operator
+     * @notice The universe will then be operated by _defaultOperator
+     * @param universeId The id of the universe
+     */
     function removeUniverseOperator(uint256 universeId) external onlyOwner {
         delete _universeOperators[universeId];
         emit UniverseOperator(universeId, _defaultOperator);
     }
 
+    /**
+     * @dev Returns the default operator
+     */
     function defaultOperator() external view returns (address) {
         return _defaultOperator;
     }
 
+    /**
+     * @dev Returns the operator of a specific universe
+     * @param universeId The id of the universe
+     */
     function universeOperator(uint256 universeId)
         public
         view

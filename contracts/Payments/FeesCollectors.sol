@@ -18,10 +18,23 @@ import "./Operators.sol";
  */
 
 contract FeesCollectors is Operators {
+    /**
+     * @dev Event emitted on change of default feesCollector
+     * @param feesCollector The address of the new default feesCollector
+     */
     event DefaultFeesCollector(address indexed feesCollector);
+
+    /**
+     * @dev Event emitted on change of a specific universe feesCollector
+     * @param universeId The id of the universe
+     * @param feesCollector The address of the new universe feesCollector
+     */
     event UniverseFeesCollector(uint256 indexed universeId, address indexed feesCollector);
 
+    /// @dev The address of the default feesCollector:
     address private _defaultFeesCollector;
+
+    /// @dev The mapping from universeId to specific universe feesCollector:
     mapping(uint256 => address) private _universeFeesCollectors;
 
     constructor() {
@@ -29,11 +42,20 @@ contract FeesCollectors is Operators {
         emit DefaultFeesCollector(msg.sender);
     }
 
+    /**
+     * @dev Sets a new default feesCollector
+     * @param feesCollector The address of the new default feesCollector
+     */
     function setDefaultFeesCollector(address feesCollector) external onlyOwner {
         _defaultFeesCollector = feesCollector;
         emit DefaultFeesCollector(feesCollector);
     }
 
+    /**
+     * @dev Sets a new specific universe feesCollector
+     * @param universeId The id of the universe
+     * @param feesCollector The address of the new universe feesCollector
+     */
     function setUniverseFeesCollector(uint256 universeId, address feesCollector)
         external
         onlyOwner
@@ -42,6 +64,11 @@ contract FeesCollectors is Operators {
         emit UniverseFeesCollector(universeId, feesCollector);
     }
 
+    /**
+     * @dev Removes a specific universe feesCollector
+     * @notice The universe will then have fees collected by _defaultFeesCollector
+     * @param universeId The id of the universe
+     */
     function removeUniverseFeesCollector(uint256 universeId)
         external
         onlyOwner
@@ -50,10 +77,17 @@ contract FeesCollectors is Operators {
         emit UniverseFeesCollector(universeId, _defaultFeesCollector);
     }
 
+    /**
+     * @dev Returns the default feesCollector
+     */
     function defaultFeesCollector() external view returns (address) {
         return _defaultFeesCollector;
     }
 
+    /**
+     * @dev Returns the feesCollector of a specific universe
+     * @param universeId The id of the universe
+     */
     function universeFeesCollector(uint256 universeId)
         public
         view

@@ -41,17 +41,55 @@ import "./EIP712Verifier.sol";
 import "./IEIP712Verifier.sol";
 
 interface IPaymentsERC20 is IEIP712Verifier {
+    /**
+     * @dev Event emitted on change of payment window
+     * @param window The new amount of time after the arrival of a payment for which, 
+     *  in absence of confirmation of asset transfer success, a buyer is allowed to refund
+     */
     event PaymentWindow(uint256 window);
+
+    /**
+     * @dev Event emitted when a user executes the registerAsSeller method
+     * @param seller The address of the newly registeredAsSeller user.
+     */
     event NewSeller(address indexed seller);
+
+    /**
+     * @dev Event emitted when a buyer is refunded for a given payment process
+     * @param paymentId The id of the already initiated payment 
+     * @param buyer The address of the refunded buyer
+     */
     event BuyerRefunded(bytes32 indexed paymentId, address indexed buyer);
+
+    /**
+     * @dev Event emitted when funds for a given payment arrive to this contract
+     * @param paymentId The unique id identifying the payment 
+     * @param buyer The address of the buyer providing the funds
+     * @param seller The address of the seller of the asset
+     */
     event Payin(
         bytes32 indexed paymentId,
         address indexed buyer,
         address indexed seller
     );
+
+    /**
+     * @dev Event emitted when a payment process arrives at the PAID 
+     *  final state, where the seller receives the funds.
+     * @param paymentId The id of the already initiated payment 
+     */
     event Paid(bytes32 indexed paymentId);
+
+    /**
+     * @dev Event emitted when user withdraws funds from this contract
+     * @param user The address of the user that withdraws
+     * @param amount The amount withdrawn, in lowest units of the ERC20 token
+     */
     event Withdraw(address indexed user, uint256 amount);
 
+    /**
+     * @dev The enum characterizing the possible states of a payment process
+     */
     enum States {
         NotStarted,
         AssetTransferring,
@@ -61,17 +99,37 @@ interface IPaymentsERC20 is IEIP712Verifier {
 
     /**
      * @notice Main struct stored with every payment.
-     *  feeBPS is the percentage fee expressed in Basis Points (bps), typical in finance
-     *  Examples:  2.5% = 250 bps, 10% = 1000 bps, 100% = 10000 bps
+     *  All variables of the struct remain immutable throughout a payment process
+     *  except for `state`.
      */
     struct Payment {
+        // the current state of the payment process
         States state;
+
+        // the buyer, providing the required funds, who shall receive
+        // the asset on a successful payment.
         address buyer;
+
+        // the seller of the asset, who shall receive the funds
+        // (subtracting fees) on a successful payment.        
         address seller;
+
+        // The address of the operator of this payment
         address operator;
+
+        // The address of the feesCollector of this payment
         address feesCollector;
+
+        // The timestamp after which, in absence of confirmation of 
+        // asset transfer success, a buyer is allowed to refund
         uint256 expirationTime;
+
+        // the percentage fee expressed in Basis Points (bps), typical in finance
+        // Examples:  2.5% = 250 bps, 10% = 1000 bps, 100% = 10000 bps
         uint16 feeBPS;
+
+        // the price of the asset, an integer expressed in the
+        // lowest unit of the ERC20 token.
         uint256 amount;
     }
 
