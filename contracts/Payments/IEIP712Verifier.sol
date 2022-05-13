@@ -7,8 +7,8 @@ import "openzeppelin-solidity/contracts/utils/cryptography/ECDSA.sol";
 /**
  * @title Interface to Verification of MetaTXs for Payments using EIP712.
  * @author Freeverse.io, www.freeverse.io
- * @dev This contract just defines the structure of a Payment Input
- *  and exposes a verify function, using the EIP712 code by OpenZeppelin
+ * @dev This contract defines two structures (PaymentInput, AssetTransferResult)
+ *  and their two corresponding verify functions, which use the EIP712 code by OpenZeppelin
  */
 
 interface IEIP712Verifier {
