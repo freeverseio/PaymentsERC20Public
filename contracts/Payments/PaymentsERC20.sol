@@ -94,33 +94,11 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
             universeOperator(inp.universeId) == msg.sender,
             "operator not authorized for this universeId"
         );
-        checkPaymentInputs(inp);
         require(
             verifyPayment(inp, buyerSignature, inp.buyer),
             "incorrect buyer signature"
         );
-        _payments[inp.paymentId] = Payment(
-            States.AssetTransferring,
-            inp.buyer,
-            inp.seller,
-            msg.sender,
-            universeFeesCollector(inp.universeId),
-            block.timestamp + _paymentWindow,
-            inp.feeBPS,
-            inp.amount
-        );
-        (uint256 newFunds, uint256 localFunds) = splitFundingSources(
-            inp.buyer,
-            inp.amount
-        );
-        if (newFunds > 0) {
-            require(
-                IERC20(_erc20).transferFrom(inp.buyer, address(this), newFunds),
-                "ERC20 transfer failed"
-            );
-        }
-        _balanceOf[inp.buyer] -= localFunds;
-        emit Payin(inp.paymentId, inp.buyer, inp.seller);
+        _processInputPayment(inp, msg.sender);
     }
 
     /// @inheritdoc IPaymentsERC20
@@ -131,35 +109,12 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
             msg.sender == inp.buyer,
             "only buyer can execute this function"
         );
-        checkPaymentInputs(inp);
         address operator = universeOperator(inp.universeId);
         require(
             verifyPayment(inp, operatorSignature, operator),
             "incorrect operator signature"
         );
-
-        _payments[inp.paymentId] = Payment(
-            States.AssetTransferring,
-            inp.buyer,
-            inp.seller,
-            operator,
-            universeFeesCollector(inp.universeId),
-            block.timestamp + _paymentWindow,
-            inp.feeBPS,
-            inp.amount
-        );
-        (uint256 newFunds, uint256 localFunds) = splitFundingSources(
-            inp.buyer,
-            inp.amount
-        );
-        if (newFunds > 0) {
-            require(
-                IERC20(_erc20).transferFrom(inp.buyer, address(this), newFunds),
-                "ERC20 transfer failed"
-            );
-        }
-        _balanceOf[inp.buyer] -= localFunds;
-        emit Payin(inp.paymentId, inp.buyer, inp.seller);
+        _processInputPayment(inp, operator);
     }
 
     /// @inheritdoc IPaymentsERC20
@@ -196,6 +151,43 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     }
 
     // PRIVATE FUNCTIONS
+    /**
+     * @dev (private) Checks payment input parameters,
+     *  transfers the funds required from the external
+     *  ERC20 contract, reusing buyer's local balance (if any),
+     *  and stores the payment data in contract's storage.
+     *  Moves the payment to AssetTransferring state
+     * @param inp The PaymentInput struct
+     * @param operator The address of the operator of this payment.
+     */
+    function _processInputPayment(
+        PaymentInput calldata inp,
+        address operator
+    ) private {
+        checkPaymentInputs(inp);
+        _payments[inp.paymentId] = Payment(
+            States.AssetTransferring,
+            inp.buyer,
+            inp.seller,
+            operator,
+            universeFeesCollector(inp.universeId),
+            block.timestamp + _paymentWindow,
+            inp.feeBPS,
+            inp.amount
+        );
+        (uint256 newFunds, uint256 localFunds) = splitFundingSources(
+            inp.buyer,
+            inp.amount
+        );
+        if (newFunds > 0) {
+            require(
+                IERC20(_erc20).transferFrom(inp.buyer, address(this), newFunds),
+                "ERC20 transfer failed"
+            );
+        }
+        _balanceOf[inp.buyer] -= localFunds;
+        emit Payin(inp.paymentId, inp.buyer, inp.seller);
+    }
 
     /**
      * @dev (private) Moves the payment funds to the buyer's local balance
@@ -310,7 +302,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     }
 
     /// @inheritdoc IPaymentsERC20
-    function erc20BalanceOf(address addr) external view returns (uint256) {
+    function erc20BalanceOf(address addr) public view returns (uint256) {
         return IERC20(_erc20).balanceOf(addr);
     }
 
@@ -362,7 +354,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, EIP712Verifier {
     /// @inheritdoc IPaymentsERC20
     function maxFundsAvailable(address buyer) public view returns (uint256) {
         uint256 approved = allowance(buyer);
-        uint256 erc20Balance = IERC20(_erc20).balanceOf(buyer);
+        uint256 erc20Balance = erc20BalanceOf(buyer);
         uint256 externalAvailable = (approved < erc20Balance)
             ? approved
             : erc20Balance;
