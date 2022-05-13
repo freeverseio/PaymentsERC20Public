@@ -49,7 +49,7 @@ interface IPaymentsERC20 is IEIP712Verifier {
         address indexed buyer,
         address indexed seller
     );
-    event Paid(bytes32 paymentId);
+    event Paid(bytes32 indexed paymentId);
     event Withdraw(address indexed user, uint256 amount);
 
     enum States {
