@@ -72,7 +72,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators {
      * @notice Sets the address of the EIP712 verifier contract.
      * @dev This upgradable pattern is required in case that the 
      *  EIP712 spec/code changes in the future
-     * @param eip712address The amount of time available, in seconds.
+     * @param eip712address The address of the new EIP712 contract.
      */
     function setEIP712(address eip712address) external onlyOwner {
         _eip712 = eip712address;
