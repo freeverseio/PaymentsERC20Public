@@ -11,6 +11,7 @@ require('chai')
   .should();
 
 const MyToken = artifacts.require('MyToken');
+const EIP712Verifier = artifacts.require('EIP712Verifier');
 const PaymentsERC20 = artifacts.require('PaymentsERC20');
 
 const toBN = (x) => web3.utils.toBN(x);
@@ -69,13 +70,19 @@ contract('CryptoPayments2', (accounts) => {
   const timeTravel = new TimeTravel(web3);
 
   let erc20;
+  let eip712;
   let payments;
   let snapshot;
 
   beforeEach(async () => {
     snapshot = await timeTravel.takeSnapshot();
     erc20 = await MyToken.new(name, symbol).should.be.fulfilled;
-    payments = await PaymentsERC20.new(erc20.address, CURRENCY_DESCRIPTOR).should.be.fulfilled;
+    eip712 = await EIP712Verifier.new().should.be.fulfilled;
+    payments = await PaymentsERC20.new(
+      erc20.address,
+      CURRENCY_DESCRIPTOR,
+      eip712.address,
+    ).should.be.fulfilled;
     await registerAccountInLocalTestnet(buyerAccount).should.be.fulfilled;
     await registerAccountInLocalTestnet(operatorAccount).should.be.fulfilled;
     await erc20.transfer(operator, initialOperatorERC20, { from: deployer });
@@ -97,7 +104,7 @@ contract('CryptoPayments2', (accounts) => {
       prepareDataToSignAssetTransfer({
         msg: data,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
     await payments.finalize(
@@ -124,7 +131,7 @@ contract('CryptoPayments2', (accounts) => {
       prepareDataToSignPayment({
         msg: _paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
     // Pay
@@ -151,7 +158,7 @@ contract('CryptoPayments2', (accounts) => {
       prepareDataToSignPayment({
         msg: _paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
 
@@ -714,7 +721,7 @@ contract('CryptoPayments2', (accounts) => {
       prepareDataToSignPayment({
         msg: paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
 
@@ -742,7 +749,7 @@ contract('CryptoPayments2', (accounts) => {
       prepareDataToSignPayment({
         msg: paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
 
@@ -775,7 +782,7 @@ contract('CryptoPayments2', (accounts) => {
       prepareDataToSignPayment({
         msg: paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
 
@@ -854,7 +861,7 @@ contract('CryptoPayments2', (accounts) => {
       prepareDataToSignPayment({
         msg: paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
 
