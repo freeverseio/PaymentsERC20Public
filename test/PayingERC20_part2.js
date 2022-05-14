@@ -368,6 +368,21 @@ contract('CryptoPayments2', (accounts) => {
     );
   });
 
+  it('Withdraw of portion of available funds fails if not enough local funds', async () => {
+    await executeRelayedPay(paymentData, initialBuyerERC20, initialBuyerETH, operator);
+    await finalize(paymentData.paymentId, true, operatorPrivKey);
+
+    const feeAmount = Math.floor(Number(paymentData.amount) * paymentData.feeBPS) / 10000;
+    const sellerAmount = Number(paymentData.amount) - feeAmount;
+
+    // seller withdraws all local balance except for 20 tokens
+    const amountToWithdraw = sellerAmount + 1;
+    await truffleAssert.reverts(
+      payments.withdrawAmount(amountToWithdraw, { from: paymentData.seller }),
+      'not enough balance to withdraw specified amount.',
+    );
+  });
+
   it('From PAID: no further action is accepted', async () => {
     const signature = await executeRelayedPay(
       paymentData, initialBuyerERC20, initialBuyerETH, operator,
