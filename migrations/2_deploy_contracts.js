@@ -6,6 +6,7 @@ require('chai')
   .should();
 
 const MyToken = artifacts.require('MyToken');
+const EIP712Verifier = artifacts.require('EIP712Verifier');
 const PaymentsERC20 = artifacts.require('PaymentsERC20');
 
 module.exports = (deployer, network) => {
@@ -35,12 +36,17 @@ module.exports = (deployer, network) => {
       console.log('🚀  Re-using previously deployed ERC20 deployed at: ', erc20address);
     }
 
+    // Deploy the EIP721 verifier
+    const eip712 = await EIP712Verifier.new().should.be.fulfilled;
+
     console.log('* Deploying Cryptopayments... ');
     console.log('  ...with associated ERC20 at: ', erc20address);
     console.log('  ...with description: ', paymentsData.currencyDescriptor);
+    console.log('  ...with associated EIP712 verifier at: ', eip712.address);
     const payments = await PaymentsERC20.new(
       erc20address,
       paymentsData.currencyDescriptor,
+      eip712.address,
     ).should.be.fulfilled;
 
     console.log('🚀  Cryptopayments deployed at:', payments.address);
