@@ -374,6 +374,11 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators {
     }
 
     /// @inheritdoc IPaymentsERC20
+    function EIP712Address() external view returns (address) {
+        return _eip712;
+    }
+
+    /// @inheritdoc IPaymentsERC20
     function paymentWindow() external view returns (uint256) {
         return _paymentWindow;
     }

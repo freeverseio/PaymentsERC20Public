@@ -316,6 +316,13 @@ interface IPaymentsERC20 is ISignableStructs {
     function acceptsRefunds(bytes32 paymentId) external view returns (bool);
 
     /**
+     * @notice Returns the address of the of the contract containing
+     *  the implementation of the EIP712 verifying functions
+     * @return the address of the EIP712 verifier contract
+     */
+    function EIP712Address() external view returns (address);
+
+    /**
      * @notice Returns the amount of seconds that a payment
      *  can remain in ASSET_TRANSFERRING state without positive
      *  or negative confirmation by the operator
