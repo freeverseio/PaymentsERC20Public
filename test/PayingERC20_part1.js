@@ -282,6 +282,7 @@ contract('CryptoPayments1', (accounts) => {
     assert.equal(await payments.defaultFeesCollector(), accounts[0]);
     assert.equal(await payments.owner(), accounts[0]);
     assert.equal(await payments.erc20(), erc20.address);
+    assert.equal(await payments.EIP712Address(), eip712.address);
     assert.equal(Number(await payments.paymentWindow()), 30 * 24 * 3600);
     assert.equal(Number(await payments.balanceOf(paymentData.seller)), 0);
     assert.equal(Number(await payments.balanceOf(paymentData.buyer)), 0);
@@ -299,6 +300,20 @@ contract('CryptoPayments1', (accounts) => {
     );
     await payments.setIsSellerRegistrationRequired(true, { from: deployer }).should.be.fulfilled;
     assert.equal(await payments.isSellerRegistrationRequired(), true);
+  });
+
+  it('Set EIP712 verifier contract works as expected', async () => {
+    const newAddress = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+    await truffleAssert.reverts(
+      payments.setEIP712(newAddress, { from: alice }),
+      'caller is not the owner',
+    );
+    await payments.setEIP712(newAddress, { from: deployer }).should.be.fulfilled;
+    assert.equal(Number(await payments.EIP712Address()), newAddress);
+
+    // check event
+    const past = await payments.getPastEvents('EIP712', { fromBlock: 0, toBlock: 'latest' }).should.be.fulfilled;
+    assert.equal(past[0].args.eip712address, newAddress);
   });
 
   it('Set payment window works if within limits', async () => {
