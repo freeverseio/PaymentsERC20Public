@@ -656,7 +656,7 @@ contract('CryptoPayments2', (accounts) => {
     // Anyone can execute refundAndWithdraw. The reason bob fails is that he does not have balance:
     await truffleAssert.reverts(
       payments.refundAndWithdraw(paymentData.paymentId, { from: bob }),
-      'cannot withdraw: balance is zero',
+      'cannot withdraw zero amount',
     );
     // The buyer can do it because he has balance right after the refund:
     await payments.refundAndWithdraw(
