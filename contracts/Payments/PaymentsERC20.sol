@@ -182,9 +182,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators {
     function withdrawAmount(uint256 amount) external {
         uint256 balance = _balanceOf[msg.sender];
         require(balance >= amount, "not enough balance to withdraw specified amount");
-        _balanceOf[msg.sender] = (balance - amount);
-        IERC20(_erc20).transfer(msg.sender, amount);
-        emit Withdraw(msg.sender, amount);
+        _withdrawAmount(amount, balance - amount);
     }
 
     // PRIVATE FUNCTIONS
@@ -307,15 +305,24 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators {
     }
 
     /**
-     * @dev (private) Transfers ERC20 available in this
+     * @dev (private) Transfers all ERC20 available in this
      *  contract's balanceOf[msg.sender] to msg.sender
+     */
+    function _withdraw() private {
+        _withdrawAmount(_balanceOf[msg.sender], 0);
+    }
+
+    /**
+     * @dev (private) Transfers the specified amount of 
+     *  ERC20 in this contract's balanceOf[msg.sender] to msg.sender
+     *  The checks that enough amount is available, and the computation
+     *  of the final balance need to be done before calling this function.
      *  Follows standard Checks-Effects-Interactions pattern
      *  to protect against re-entrancy attacks.
      */
-    function _withdraw() private {
-        uint256 amount = _balanceOf[msg.sender];
-        require(amount > 0, "cannot withdraw: balance is zero");
-        _balanceOf[msg.sender] = 0;
+    function _withdrawAmount(uint256 amount, uint256 finalBalance) private {
+        require(amount > 0, "cannot withdraw zero amount");
+        _balanceOf[msg.sender] = finalBalance;
         IERC20(_erc20).transfer(msg.sender, amount);
         emit Withdraw(msg.sender, amount);
     }
