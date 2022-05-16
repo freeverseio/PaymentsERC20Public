@@ -8,10 +8,13 @@ import "./IEIP712Verifier.sol";
 /**
  * @title Verification of MetaTXs for Payments using EIP712.
  * @author Freeverse.io, www.freeverse.io
- * @dev This contract defines two structures:
- *  PaymentInput: to start a payment process
- *  AssetTransferResult: to let the operator confirm success/failure of an asset transfer
- *  It exposes the corresponding verify functions, using the EIP712 code by OpenZeppelin
+ * @dev This contract implements the two verification functions for the two main
+ *  structures required in the payment process, and defined in ISignableStructs:
+ *  - PaymentInput: to start a payment process
+ *  - AssetTransferResult: to let the operator confirm the success or failure of an asset transfer
+ *  The implementation uses the code in draft-EIP712 by OpenZeppelin.
+ *  Contracts that call the code provided in this contract are recommended to implement an 
+ *  upgrade pattern, in case that the EIP712 spec/code changes in the future.
  */
 
 contract EIP712Verifier is IEIP712Verifier, EIP712 {

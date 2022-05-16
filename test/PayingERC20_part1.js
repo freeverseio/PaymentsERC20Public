@@ -11,6 +11,7 @@ require('chai')
   .should();
 
 const MyToken = artifacts.require('MyToken');
+const EIP712Verifier = artifacts.require('EIP712Verifier');
 const PaymentsERC20 = artifacts.require('PaymentsERC20');
 
 const toBN = (x) => web3.utils.toBN(x);
@@ -69,13 +70,19 @@ contract('CryptoPayments1', (accounts) => {
   const timeTravel = new TimeTravel(web3);
 
   let erc20;
+  let eip712;
   let payments;
   let snapshot;
 
   beforeEach(async () => {
     snapshot = await timeTravel.takeSnapshot();
     erc20 = await MyToken.new(name, symbol).should.be.fulfilled;
-    payments = await PaymentsERC20.new(erc20.address, CURRENCY_DESCRIPTOR).should.be.fulfilled;
+    eip712 = await EIP712Verifier.new().should.be.fulfilled;
+    payments = await PaymentsERC20.new(
+      erc20.address,
+      CURRENCY_DESCRIPTOR,
+      eip712.address,
+    ).should.be.fulfilled;
     await registerAccountInLocalTestnet(buyerAccount).should.be.fulfilled;
     await registerAccountInLocalTestnet(operatorAccount).should.be.fulfilled;
     await erc20.transfer(operator, initialOperatorERC20, { from: deployer });
@@ -97,7 +104,7 @@ contract('CryptoPayments1', (accounts) => {
       prepareDataToSignAssetTransfer({
         msg: data,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
     await payments.finalize(
@@ -125,7 +132,7 @@ contract('CryptoPayments1', (accounts) => {
       prepareDataToSignPayment({
         msg: _paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
     // Pay
@@ -153,7 +160,7 @@ contract('CryptoPayments1', (accounts) => {
       prepareDataToSignPayment({
         msg: _paymentData,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
 
@@ -275,6 +282,7 @@ contract('CryptoPayments1', (accounts) => {
     assert.equal(await payments.defaultFeesCollector(), accounts[0]);
     assert.equal(await payments.owner(), accounts[0]);
     assert.equal(await payments.erc20(), erc20.address);
+    assert.equal(await payments.EIP712Address(), eip712.address);
     assert.equal(Number(await payments.paymentWindow()), 30 * 24 * 3600);
     assert.equal(Number(await payments.balanceOf(paymentData.seller)), 0);
     assert.equal(Number(await payments.balanceOf(paymentData.buyer)), 0);
@@ -292,6 +300,20 @@ contract('CryptoPayments1', (accounts) => {
     );
     await payments.setIsSellerRegistrationRequired(true, { from: deployer }).should.be.fulfilled;
     assert.equal(await payments.isSellerRegistrationRequired(), true);
+  });
+
+  it('Set EIP712 verifier contract works as expected', async () => {
+    const newAddress = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+    await truffleAssert.reverts(
+      payments.setEIP712(newAddress, { from: alice }),
+      'caller is not the owner',
+    );
+    await payments.setEIP712(newAddress, { from: deployer }).should.be.fulfilled;
+    assert.equal(Number(await payments.EIP712Address()), newAddress);
+
+    // check event
+    const past = await payments.getPastEvents('EIP712', { fromBlock: 0, toBlock: 'latest' }).should.be.fulfilled;
+    assert.equal(past[0].args.eip712address, newAddress);
   });
 
   it('Set payment window works if within limits', async () => {
@@ -491,7 +513,7 @@ contract('CryptoPayments1', (accounts) => {
       prepareDataToSignPayment({
         msg: paymentData2,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
     await truffleAssert.reverts(
@@ -517,7 +539,7 @@ contract('CryptoPayments1', (accounts) => {
       prepareDataToSignPayment({
         msg: paymentData2,
         chainId: await web3.eth.getChainId(),
-        contractAddress: payments.address,
+        contractAddress: eip712.address,
       }),
     );
     await truffleAssert.reverts(
