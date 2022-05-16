@@ -4,7 +4,7 @@ pragma solidity =0.8.12;
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "./Operators.sol";
 import "./FeesCollectors.sol";
-import "./EIP712Verifier.sol";
+import "./IEIP712Verifier.sol";
 import "./IPaymentsERC20.sol";
 
 /**
@@ -50,8 +50,9 @@ import "./IPaymentsERC20.sol";
  *    regardless of any previous call to the registerAsSeller method.
  */
 
-contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verifier {
+contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators {
     address private immutable _erc20;
+    address private _eip712;
     string private _acceptedCurrency;
     uint256 private _paymentWindow;
     bool private _isSellerRegistrationRequired;
@@ -59,11 +60,23 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verif
     mapping(bytes32 => Payment) private _payments;
     mapping(address => uint256) private _balanceOf;
 
-    constructor(address erc20Address, string memory currencyDescriptor) {
+    constructor(address erc20Address, string memory currencyDescriptor, address eip712) {
         _erc20 = erc20Address;
+        _eip712 = eip712;
         _acceptedCurrency = currencyDescriptor;
         _paymentWindow = 30 days;
         _isSellerRegistrationRequired = false;
+    }
+
+    /**
+     * @notice Sets the address of the EIP712 verifier contract.
+     * @dev This upgradable pattern is required in case that the 
+     *  EIP712 spec/code changes in the future
+     * @param eip712address The address of the new EIP712 contract.
+     */
+    function setEIP712(address eip712address) external onlyOwner {
+        _eip712 = eip712address;
+        emit EIP712(eip712address);
     }
 
     /**
@@ -110,7 +123,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verif
             "operator not authorized for this universeId"
         );
         require(
-            verifyPayment(payInput, buyerSignature, payInput.buyer),
+            IEIP712Verifier(_eip712).verifyPayment(payInput, buyerSignature, payInput.buyer),
             "incorrect buyer signature"
         );
         _processInputPayment(payInput, msg.sender);
@@ -126,7 +139,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verif
         );
         address operator = universeOperator(payInput.universeId);
         require(
-            verifyPayment(payInput, operatorSignature, operator),
+            IEIP712Verifier(_eip712).verifyPayment(payInput, operatorSignature, operator),
             "incorrect operator signature"
         );
         _processInputPayment(payInput, operator);
@@ -247,7 +260,7 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verif
             "payment not initially in asset transferring state"
         );
         require(
-            verifyAssetTransferResult(transferResult, operatorSignature, payment.operator),
+            IEIP712Verifier(_eip712).verifyAssetTransferResult(transferResult, operatorSignature, payment.operator),
             "only the operator can sign an assetTransferResult"
         );
         if (transferResult.wasSuccessful) {
@@ -367,6 +380,11 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verif
         return
             (paymentState(paymentId) == State.AssetTransferring) &&
             (block.timestamp > _payments[paymentId].expirationTime);
+    }
+
+    /// @inheritdoc IPaymentsERC20
+    function EIP712Address() external view returns (address) {
+        return _eip712;
     }
 
     /// @inheritdoc IPaymentsERC20

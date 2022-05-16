@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.12;
 
-import "./IEIP712Verifier.sol";
+import "./ISignableStructs.sol";
 
 /**
  * @title Interface to Payments Contract in ERC20.
@@ -38,7 +38,13 @@ import "./IEIP712Verifier.sol";
  *
  */
 
-interface IPaymentsERC20 is IEIP712Verifier {
+interface IPaymentsERC20 is ISignableStructs {
+    /**
+     * @dev Event emitted on change of EIP712 verifier contract address
+     * @param eip712address The address of the new EIP712 verifier contract
+     */
+
+    event EIP712(address eip712address);
     /**
      * @dev Event emitted on change of payment window
      * @param window The new amount of time after the arrival of a payment for which, 
@@ -308,6 +314,13 @@ interface IPaymentsERC20 is IEIP712Verifier {
      * @return true if the payment accepts a refund to the buyer.
      */
     function acceptsRefunds(bytes32 paymentId) external view returns (bool);
+
+    /**
+     * @notice Returns the address of the of the contract containing
+     *  the implementation of the EIP712 verifying functions
+     * @return the address of the EIP712 verifier contract
+     */
+    function EIP712Address() external view returns (address);
 
     /**
      * @notice Returns the amount of seconds that a payment
