@@ -308,6 +308,8 @@ contract PaymentsERC20 is IPaymentsERC20, FeesCollectors, Operators, EIP712Verif
      *  of the final balance need to be done before calling this function.
      *  Follows standard Checks-Effects-Interactions pattern
      *  to protect against re-entrancy attacks.
+     * @param amount The amount to withdraw.
+     * @param finalBalance The final balance of msg.sender after withdrawal.
      */
     function _withdrawAmount(uint256 amount, uint256 finalBalance) private {
         require(amount > 0, "cannot withdraw zero amount");
