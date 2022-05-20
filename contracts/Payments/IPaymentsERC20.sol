@@ -229,6 +229,14 @@ interface IPaymentsERC20 is IEIP712Verifier {
      */
     function withdraw() external;
 
+    /**
+     * @notice Transfers only the specified ERC20 amount
+     *  from this contract's balanceOf[msg.sender] to msg.sender.
+     *  Reverts if balanceOf[msg.sender] < amount.
+     * @param amount The required amount to withdraw
+     */
+    function withdrawAmount(uint256 amount) external;
+
     // VIEW FUNCTIONS
 
     /**

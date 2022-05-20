@@ -312,13 +312,74 @@ contract('CryptoPayments2', (accounts) => {
 
     // the feescollector has collected 3 fees
     expectedERC20FeesCollector.iadd(toBN(3 * feeAmount));
-    expectedERC20Seller = toBN(2 * sellerAmount);
-    expectedERC20Bob = toBN(sellerAmount);
+    const expectedERC20Seller = toBN(2 * sellerAmount);
+    const expectedERC20Bob = toBN(sellerAmount);
 
     await assertBalances(
       erc20,
       [paymentData.seller, bob, feesCollector],
       [expectedERC20Seller, expectedERC20Bob, expectedERC20FeesCollector],
+    );
+  });
+
+  it('Withdraw of portion of available funds works', async () => {
+    await executeRelayedPay(paymentData, initialBuyerERC20, initialBuyerETH, operator);
+    await finalize(paymentData.paymentId, true, operatorPrivKey);
+
+    const feeAmount = Math.floor(Number(paymentData.amount) * paymentData.feeBPS) / 10000;
+    const sellerAmount = Number(paymentData.amount) - feeAmount;
+
+    // seller withdraws all local balance except for 20 tokens
+    const amountToWithdraw = sellerAmount - 20;
+    await payments.withdrawAmount(amountToWithdraw, { from: paymentData.seller });
+
+    // seller should have 20 tokens in local balance, and the amount withdrawn in the ERC20 contract
+    const expectedERC20Seller = toBN(amountToWithdraw);
+    const expectedLocalBalanceSeller = toBN(20);
+
+    await assertBalances(
+      erc20,
+      [paymentData.seller],
+      [expectedERC20Seller],
+    );
+
+    await assertBalances(
+      payments,
+      [paymentData.seller],
+      [expectedLocalBalanceSeller],
+    );
+
+    // seller can further withdraw 5 more
+    await payments.withdrawAmount(5, { from: paymentData.seller });
+
+    expectedERC20Seller.iadd(toBN(5));
+    expectedLocalBalanceSeller.isub(toBN(5));
+
+    await assertBalances(
+      erc20,
+      [paymentData.seller],
+      [expectedERC20Seller],
+    );
+
+    await assertBalances(
+      payments,
+      [paymentData.seller],
+      [expectedLocalBalanceSeller],
+    );
+  });
+
+  it('Withdraw of portion of available funds fails if not enough local funds', async () => {
+    await executeRelayedPay(paymentData, initialBuyerERC20, initialBuyerETH, operator);
+    await finalize(paymentData.paymentId, true, operatorPrivKey);
+
+    const feeAmount = Math.floor(Number(paymentData.amount) * paymentData.feeBPS) / 10000;
+    const sellerAmount = Number(paymentData.amount) - feeAmount;
+
+    // seller withdraws all local balance except for 20 tokens
+    const amountToWithdraw = sellerAmount + 1;
+    await truffleAssert.reverts(
+      payments.withdrawAmount(amountToWithdraw, { from: paymentData.seller }),
+      'not enough balance to withdraw specified amount.',
     );
   });
 
@@ -595,7 +656,7 @@ contract('CryptoPayments2', (accounts) => {
     // Anyone can execute refundAndWithdraw. The reason bob fails is that he does not have balance:
     await truffleAssert.reverts(
       payments.refundAndWithdraw(paymentData.paymentId, { from: bob }),
-      'cannot withdraw: balance is zero',
+      'cannot withdraw zero amount',
     );
     // The buyer can do it because he has balance right after the refund:
     await payments.refundAndWithdraw(
